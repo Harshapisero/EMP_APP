@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="06bc7f39-7a4a-4129-a336-50193883fde8" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="90b4cca7-b360-4753-8353-318ffddf498d" >
+		<db:my-sql-connection host="sql6.freemysqlhosting.net" port="3306" user="sql6456708" password="Mg9QKSfBeq" database="sql6456708" />
+	</db:config>
+	<flow name="ShowRecord" doc:id="eb98050a-6824-4197-bf2d-67c3079d9dc9" >
+		<http:listener doc:name="Listener" doc:id="b3af2475-efe7-4fb0-8ec6-1312f93d90b5" config-ref="HTTP_Listener_config" path="/emp"/>
+		<db:select doc:id="72cc7515-53b0-4dfb-8209-3753bab6823a" config-ref="Database_Config">
+			<db:sql ><![CDATA[select * from Employee]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="da7a3cf1-6123-4c6a-9942-8b252364bc22" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="d50fa897-1dc5-48c5-9992-2c6adbb21e6f" message="success"/>
+	</flow>
+	<flow name="InsertNewRecord" doc:id="61dd708a-a3be-4745-9033-9a7f0c1f4a4d" >
+		<http:listener doc:name="Listener" doc:id="0bdaf249-81e0-4dba-bb9b-f7b42f2e625c" config-ref="HTTP_Listener_config" path="/insert"/>
+		<db:insert doc:name="Insert" doc:id="25055c31-26d9-4d4e-9973-60f3f24dd35f" config-ref="Database_Config">
+			<db:sql ><![CDATA[INSERT INTO Employee values(:E_ID,:E_NAME,:E_SALARY)]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+   E_ID:payload.E_ID,
+   E_NAME:payload.E_NAME,
+   E_SALARY:payload.E_SALARY	
+}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Transform Message" doc:id="ce306cd5-8fae-4989-a86b-ed4813f9ebf8" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"status": 200,
+	"message": "success"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
